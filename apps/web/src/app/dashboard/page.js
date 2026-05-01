@@ -86,7 +86,7 @@ export default function DashboardPage() {
           </p>
         </div>
         <div className="flex gap-2">
-          <Link href={`/dashboard/workspaces/${currentWorkspace.id}/goals`} className="btn-secondary btn-sm">
+          <Link href="/dashboard/goals" className="btn-secondary btn-sm">
             <Target className="w-4 h-4" /> View Goals
           </Link>
         </div>

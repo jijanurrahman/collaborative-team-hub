@@ -18,7 +18,6 @@ const navItems = [
   { href: '/dashboard/goals', icon: Target, label: 'Goals' },
   { href: '/dashboard/announcements', icon: Megaphone, label: 'Announcements' },
   { href: '/dashboard/action-items', icon: CheckSquare, label: 'Action Items' },
-  { href: '/dashboard/analytics', icon: BarChart2, label: 'Analytics' },
   { href: '/dashboard/audit', icon: Shield, label: 'Audit Log' },
 ];
 

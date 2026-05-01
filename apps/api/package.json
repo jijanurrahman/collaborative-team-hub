@@ -1,0 +1,45 @@
+{
+  "name": "@team-hub/api",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": {
+    "dev": "nodemon src/index.js",
+    "start": "node src/index.js",
+    "build": "echo 'No build step needed for Node.js'",
+    "lint": "eslint src/",
+    "test": "jest --passWithNoTests",
+    "db:generate": "prisma generate",
+    "db:push": "prisma db push",
+    "db:migrate": "prisma migrate deploy",
+    "db:seed": "node prisma/seed.js"
+  },
+  "dependencies": {
+    "@prisma/client": "^5.10.2",
+    "bcryptjs": "^2.4.3",
+    "cloudinary": "^2.0.3",
+    "cookie-parser": "^1.4.6",
+    "cors": "^2.8.5",
+    "express": "^4.18.3",
+    "express-rate-limit": "^7.2.0",
+    "express-validator": "^7.0.1",
+    "helmet": "^7.1.0",
+    "jsonwebtoken": "^9.0.2",
+    "morgan": "^1.10.0",
+    "multer": "^1.4.5-lts.1",
+    "multer-storage-cloudinary": "^4.0.0",
+    "nodemailer": "^6.9.11",
+    "socket.io": "^4.7.5",
+    "uuid": "^9.0.1",
+    "winston": "^3.12.0",
+    "csv-stringify": "^6.4.6",
+    "swagger-ui-express": "^5.0.0",
+    "yamljs": "^0.3.0"
+  },
+  "devDependencies": {
+    "eslint": "^8.57.0",
+    "jest": "^29.7.0",
+    "nodemon": "^3.1.0",
+    "prisma": "^5.10.2",
+    "supertest": "^6.3.4"
+  }
+}

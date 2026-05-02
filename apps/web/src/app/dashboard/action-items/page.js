@@ -108,7 +108,10 @@ export default function ActionItemsPage() {
 
   useEffect(() => {
     if (!socket) return;
-    const onCreated = (i) => setItems(prev => [i, ...prev]);
+    const onCreated = (i) => setItems(prev => {
+      if (prev.some(x => x.id === i.id)) return prev;
+      return [i, ...prev];
+    });
     const onUpdated = (i) => setItems(prev => prev.map(x => x.id === i.id ? { ...x, ...i } : x));
     const onDeleted = ({ id }) => setItems(prev => prev.filter(x => x.id !== id));
     socket.on('action_item:created', onCreated);

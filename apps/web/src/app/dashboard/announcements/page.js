@@ -40,7 +40,10 @@ export default function AnnouncementsPage() {
   useEffect(() => {
     if (!socket) return;
     const handlers = {
-      'announcement:created': (a) => setAnnouncements(prev => [a, ...prev.filter(x => !x.isPinned)]),
+      'announcement:created': (a) => setAnnouncements(prev => {
+        if (prev.some(x => x.id === a.id)) return prev;
+        return [a, ...prev];
+      }),
       'announcement:updated': (a) => setAnnouncements(prev => prev.map(x => x.id === a.id ? { ...x, ...a } : x)),
       'announcement:deleted': ({ id }) => setAnnouncements(prev => prev.filter(x => x.id !== id)),
       'announcement:pinned': ({ id, isPinned }) => setAnnouncements(prev => prev.map(x => x.id === id ? { ...x, isPinned } : x)),

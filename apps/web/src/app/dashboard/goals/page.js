@@ -39,7 +39,10 @@ export default function GoalsPage() {
   // Real-time socket events
   useEffect(() => {
     if (!socket) return;
-    const onCreated = (g) => setGoals(prev => [g, ...prev]);
+    const onCreated = (g) => setGoals(prev => {
+      if (prev.some(x => x.id === g.id)) return prev;
+      return [g, ...prev];
+    });
     const onUpdated = (g) => setGoals(prev => prev.map(item => item.id === g.id ? { ...item, ...g } : item));
     const onDeleted = ({ id }) => setGoals(prev => prev.filter(g => g.id !== id));
     

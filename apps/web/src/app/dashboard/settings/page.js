@@ -1,5 +1,5 @@
 'use client';
-import { useState, useRef } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { useAuthStore } from '@/store/authStore';
 import { useWorkspaceStore } from '@/store/workspaceStore';
 import { usersApi, workspacesApi } from '@/lib/api';
@@ -19,6 +19,14 @@ export default function SettingsPage() {
   const [saving, setSaving] = useState(false);
   const [copied, setCopied] = useState(false);
   const fileInputRef = useRef(null);
+
+  useEffect(() => {
+    if (activeTab === 'members' && currentWorkspace) {
+      workspacesApi.get(currentWorkspace.id).then(({ data }) => {
+        updateWorkspace(data.workspace);
+      }).catch(console.error);
+    }
+  }, [activeTab, currentWorkspace?.id]);
 
   const handleProfileUpdate = async (e) => {
     e.preventDefault();
@@ -83,7 +91,6 @@ export default function SettingsPage() {
     if (!confirm('Are you sure you want to remove this member?')) return;
     try {
       await workspacesApi.removeMember(currentWorkspace.id, userId);
-      // In a real app we'd update the store, but here we rely on the socket event to refresh
       toast.success('Member removed');
     } catch (_) { toast.error('Failed to remove member'); }
   };
@@ -204,7 +211,7 @@ export default function SettingsPage() {
                   </select>
                   <button type="submit" className="btn-primary whitespace-nowrap">Send Invite</button>
                 </form>
-                {copied && <p className="text-sm text-green-500 mt-2 flex items-center gap-1"><Check className="w-4 h-4"/> Invite link copied to clipboard</p>}
+                {copied && <p className="text-sm text-green-500 mt-2 flex items-center gap-1"><Check className="w-4 h-4" /> Invite link copied to clipboard</p>}
               </div>
 
               <div className="card overflow-hidden">

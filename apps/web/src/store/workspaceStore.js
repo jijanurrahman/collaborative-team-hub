@@ -15,11 +15,12 @@ export const useWorkspaceStore = create(
           set({ isLoading: true });
           try {
             const { data } = await workspacesApi.list();
-            set({ workspaces: data.workspaces, isLoading: false });
-            // Set current workspace if none selected
-            if (!get().currentWorkspace && data.workspaces.length > 0) {
-              set({ currentWorkspace: data.workspaces[0] });
-            }
+            const current = get().currentWorkspace;
+            // Always update currentWorkspace with fresh data from server
+            const updatedCurrent = current
+              ? data.workspaces.find(w => w.id === current.id) || data.workspaces[0] || null
+              : data.workspaces[0] || null;
+            set({ workspaces: data.workspaces, currentWorkspace: updatedCurrent, isLoading: false });
           } catch (err) {
             set({ error: err.response?.data?.error || 'Failed to load workspaces', isLoading: false });
           }

@@ -17,6 +17,11 @@ router.get('/', authenticate, async (req, res, next) => {
       include: {
         workspace: {
           include: {
+            members: {
+              include: {
+                user: { select: { id: true, name: true, email: true, avatarUrl: true } },
+              },
+            },
             _count: { select: { members: true, goals: true, actionItems: true } },
           },
         },
@@ -148,7 +153,7 @@ router.post('/:workspaceId/invite', authenticate, requirePermission('invite:memb
 
     await createAuditLog({ workspaceId, userId: req.user.id, action: 'INVITE', entityType: 'MEMBER', metadata: { email, role } });
 
-    res.status(201).json({ invitation, message: 'Invitation sent' });
+    res.status(201).json({ invitation, message: 'Invitation sent', inviteLink });
   } catch (err) { next(err); }
 });
 

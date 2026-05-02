@@ -40,11 +40,14 @@ function initializeSocket(server) {
     }
     onlineUsers.get(userId).add(socket.id);
 
+    // Join personal room for direct notifications
+    socket.join(`user:${userId}`);
+
     // Update user online status
     await prisma.user.update({
       where: { id: userId },
       data: { isOnline: true, lastSeen: new Date() },
-    });
+    }).catch(() => {});
 
     // Join workspace rooms
     socket.on('join:workspace', async (workspaceId) => {
@@ -54,7 +57,7 @@ function initializeSocket(server) {
         });
         if (member) {
           socket.join(`workspace:${workspaceId}`);
-          // Broadcast online members
+          // Broadcast online members list to the whole workspace
           const onlineMemberIds = [];
           const members = await prisma.workspaceMember.findMany({
             where: { workspaceId },

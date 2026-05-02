@@ -20,11 +20,12 @@ export default function SettingsPage() {
   const [copied, setCopied] = useState(false);
   const fileInputRef = useRef(null);
 
+  const { fetchWorkspaces } = useWorkspaceStore();
+
+  // Refresh members when tab changes to 'members'
   useEffect(() => {
     if (activeTab === 'members' && currentWorkspace) {
-      workspacesApi.get(currentWorkspace.id).then(({ data }) => {
-        updateWorkspace(data.workspace);
-      }).catch(console.error);
+      fetchWorkspaces();
     }
   }, [activeTab, currentWorkspace?.id]);
 
@@ -69,11 +70,10 @@ export default function SettingsPage() {
     if (!currentWorkspace || currentWorkspace.role !== 'ADMIN') return;
     try {
       const { data } = await workspacesApi.invite(currentWorkspace.id, { email: inviteEmail, role: inviteRole });
-      toast.success('Invitation sent!');
+      toast.success('Invitation sent & link copied to clipboard!', { duration: 6000 });
       setInviteEmail('');
-      // Show link if they want to copy it
-      const link = `${process.env.NEXT_PUBLIC_CLIENT_URL || window.location.origin}/invite/${data.invitation.token}`;
-      navigator.clipboard.writeText(link);
+      const link = data.inviteLink || `${window.location.origin}/invite/${data.invitation.token}`;
+      navigator.clipboard.writeText(link).catch(() => {});
       setCopied(true);
       setTimeout(() => setCopied(false), 3000);
     } catch (err) { toast.error(err.response?.data?.error || 'Failed to send invite'); }

@@ -25,6 +25,14 @@ router.get('/', authenticate, async (req, res, next) => {
         include: {
           author: { select: { id: true, name: true, avatarUrl: true } },
           reactions: { include: { user: { select: { id: true, name: true } } } },
+          comments: {
+            where: { parentId: null },
+            include: {
+              author: { select: { id: true, name: true, avatarUrl: true } },
+              replies: { include: { author: { select: { id: true, name: true, avatarUrl: true } } } },
+            },
+            orderBy: { createdAt: 'asc' },
+          },
           _count: { select: { comments: true } },
         },
         orderBy: { createdAt: 'desc' },
@@ -34,6 +42,14 @@ router.get('/', authenticate, async (req, res, next) => {
         include: {
           author: { select: { id: true, name: true, avatarUrl: true } },
           reactions: { include: { user: { select: { id: true, name: true } } } },
+          comments: {
+            where: { parentId: null },
+            include: {
+              author: { select: { id: true, name: true, avatarUrl: true } },
+              replies: { include: { author: { select: { id: true, name: true, avatarUrl: true } } } },
+            },
+            orderBy: { createdAt: 'asc' },
+          },
           _count: { select: { comments: true } },
         },
         orderBy: { createdAt: 'desc' },

@@ -68,7 +68,21 @@ const PERMISSIONS = {
 function requirePermission(permission) {
   return async (req, res, next) => {
     try {
-      const workspaceId = req.params.workspaceId || req.workspaceId || req.body.workspaceId || req.query.workspaceId;
+      let workspaceId = req.params.workspaceId || req.workspaceId || req.body.workspaceId || req.query.workspaceId;
+      
+      if (!workspaceId) {
+        if (req.params.goalId) {
+          const g = await prisma.goal.findUnique({ where: { id: req.params.goalId }, select: { workspaceId: true } });
+          workspaceId = g?.workspaceId;
+        } else if (req.params.announcementId) {
+          const a = await prisma.announcement.findUnique({ where: { id: req.params.announcementId }, select: { workspaceId: true } });
+          workspaceId = a?.workspaceId;
+        } else if (req.params.itemId) {
+          const i = await prisma.actionItem.findUnique({ where: { id: req.params.itemId }, select: { workspaceId: true } });
+          workspaceId = i?.workspaceId;
+        }
+      }
+
       if (!workspaceId) return res.status(400).json({ error: 'Workspace ID required' });
 
       const member = req.member || await prisma.workspaceMember.findUnique({

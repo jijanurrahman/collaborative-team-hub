@@ -151,6 +151,21 @@ router.post('/:workspaceId/invite', authenticate, requirePermission('invite:memb
     const inviteLink = `${process.env.CLIENT_URL}/invite/${invitation.token}`;
     await sendInvitationEmail({ to: email, inviterName: req.user.name, workspaceName: workspace.name, inviteLink });
 
+    if (existingUser) {
+      const { createNotification } = require('../utils/notifications');
+      const notification = await createNotification({
+        userId: existingUser.id,
+        type: 'SYSTEM',
+        title: 'Workspace Invitation',
+        message: `${req.user.name} invited you to join ${workspace.name}`,
+        link: `/invite/${invitation.token}`,
+      });
+      const io = req.app.get('io');
+      if (notification) {
+        io.to(`user:${existingUser.id}`).emit('notification:new', notification);
+      }
+    }
+
     await createAuditLog({ workspaceId, userId: req.user.id, action: 'INVITE', entityType: 'MEMBER', metadata: { email, role } });
 
     res.status(201).json({ invitation, message: 'Invitation sent', inviteLink });

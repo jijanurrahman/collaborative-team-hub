@@ -97,7 +97,7 @@ export default function GoalCard({ goal, onClick, onDelete, workspaceRole }) {
       {/* Counts */}
       <div className="flex items-center gap-3 mt-2 pt-2 border-t border-[var(--border-subtle)] text-xs text-[var(--text-muted)]">
         <span>{goal._count?.actionItems || 0} actions</span>
-        <span>{goal._count?.comments || 0} comments</span>
+        <span>{goal._count?.progressUpdates || 0} updates</span>
         <ChevronRight className="w-3.5 h-3.5 ml-auto opacity-0 group-hover:opacity-100 transition-opacity" />
       </div>
     </div>

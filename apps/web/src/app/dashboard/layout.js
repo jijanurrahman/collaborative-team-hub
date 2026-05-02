@@ -3,7 +3,7 @@ import { useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuthStore } from '@/store/authStore';
 import { useWorkspaceStore } from '@/store/workspaceStore';
-import { useSocketStore } from '@/store/socketStore';
+import { useSocketStore, useNotificationStore } from '@/store/socketStore';
 import { io } from 'socket.io-client';
 import Sidebar from '@/components/layout/Sidebar';
 import TopBar from '@/components/layout/TopBar';
@@ -44,6 +44,12 @@ export default function DashboardLayout({ children }) {
     socket.on('disconnect', () => setConnected(false));
     socket.on('workspace:online_members', (members) => setOnlineMembers(members));
     socket.on('user:offline', (userId) => removeOnlineMember(userId));
+    socket.on('notification:new', (notification) => {
+      useNotificationStore.getState().addNotification(notification);
+      import('react-hot-toast').then(t => t.default.success(`New notification: ${notification.title}`));
+    });
+    socket.on('workspace:member_joined', () => fetchWorkspaces());
+    socket.on('workspace:member_removed', () => fetchWorkspaces());
 
     socketRef.current = socket;
 

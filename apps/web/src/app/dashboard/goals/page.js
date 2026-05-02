@@ -42,10 +42,37 @@ export default function GoalsPage() {
     const onCreated = (g) => setGoals(prev => [g, ...prev]);
     const onUpdated = (g) => setGoals(prev => prev.map(item => item.id === g.id ? { ...item, ...g } : item));
     const onDeleted = ({ id }) => setGoals(prev => prev.filter(g => g.id !== id));
+    
+    // Listen for related entity updates to update counts
+    const onActionItemCreated = (item) => {
+      if (item.goalId) {
+        setGoals(prev => prev.map(g => g.id === item.goalId ? { ...g, _count: { ...g._count, actionItems: (g._count?.actionItems || 0) + 1 } } : g));
+      }
+    };
+    const onActionItemDeleted = ({ id, goalId }) => {
+      if (goalId) {
+        setGoals(prev => prev.map(g => g.id === goalId ? { ...g, _count: { ...g._count, actionItems: Math.max(0, (g._count?.actionItems || 1) - 1) } } : g));
+      }
+    };
+    const onProgressUpdate = ({ goalId }) => {
+      setGoals(prev => prev.map(g => g.id === goalId ? { ...g, _count: { ...g._count, progressUpdates: (g._count?.progressUpdates || 0) + 1 } } : g));
+    };
+
     socket.on('goal:created', onCreated);
     socket.on('goal:updated', onUpdated);
     socket.on('goal:deleted', onDeleted);
-    return () => { socket.off('goal:created', onCreated); socket.off('goal:updated', onUpdated); socket.off('goal:deleted', onDeleted); };
+    socket.on('action_item:created', onActionItemCreated);
+    socket.on('action_item:deleted', onActionItemDeleted);
+    socket.on('goal:progress_update', onProgressUpdate);
+
+    return () => { 
+      socket.off('goal:created', onCreated); 
+      socket.off('goal:updated', onUpdated); 
+      socket.off('goal:deleted', onDeleted); 
+      socket.off('action_item:created', onActionItemCreated);
+      socket.off('action_item:deleted', onActionItemDeleted);
+      socket.off('goal:progress_update', onProgressUpdate);
+    };
   }, [socket]);
 
   const handleCreate = async (data) => {

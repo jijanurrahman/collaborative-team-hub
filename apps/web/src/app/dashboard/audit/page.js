@@ -36,14 +36,17 @@ export default function AuditLogPage() {
   const handleExportCSV = async () => {
     if (!currentWorkspace?.id) return;
     try {
-      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/workspaces/${currentWorkspace.id}/export`, {
+      const params = new URLSearchParams({ workspaceId: currentWorkspace.id });
+      if (filterType) params.append('entityType', filterType);
+      
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/audit/export?${params.toString()}`, {
         headers: { Authorization: `Bearer ${window.__accessToken}` },
       });
       const blob = await response.blob();
       const url = window.URL.createObjectURL(blob);
       const a = document.createElement('a');
       a.href = url;
-      a.download = `${currentWorkspace.slug}-export.csv`;
+      a.download = `${currentWorkspace.slug}-audit-logs.csv`;
       document.body.appendChild(a);
       a.click();
       window.URL.revokeObjectURL(url);

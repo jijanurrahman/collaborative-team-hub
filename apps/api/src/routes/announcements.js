@@ -189,13 +189,23 @@ router.post('/:announcementId/react', authenticate, [
     if (!announcement) return res.status(404).json({ error: 'Not found' });
 
     const existing = await prisma.reaction.findFirst({
-      where: { announcementId, userId: req.user.id, emoji },
+      where: { announcementId, userId: req.user.id },
     });
 
     let action;
     if (existing) {
-      await prisma.reaction.delete({ where: { id: existing.id } });
-      action = 'removed';
+      if (existing.emoji === emoji) {
+        // Toggle off if clicking the same emoji
+        await prisma.reaction.delete({ where: { id: existing.id } });
+        action = 'removed';
+      } else {
+        // Change emoji if clicking a different one
+        await prisma.reaction.update({
+          where: { id: existing.id },
+          data: { emoji },
+        });
+        action = 'changed';
+      }
     } else {
       await prisma.reaction.create({ data: { announcementId, userId: req.user.id, emoji } });
       action = 'added';

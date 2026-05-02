@@ -2,36 +2,44 @@
 
 A full-stack web application for teams to manage shared goals, post announcements, and track action items in real time.
 
-## 🚀 Built With
+## 🚀 Live URLs
+- **Frontend URL:** [https://jijanur-team-hub.up.railway.app/](https://jijanur-team-hub.up.railway.app/)
+- **Backend API URL:** [https://collaborative-team-hub-production.up.railway.app/](https://collaborative-team-hub-production.up.railway.app/)
+
+## 👥 Demo Accounts
+Seeded accounts you can use to test immediately (all share the same password):
+- **Admin**: `jijanur@gmail.com` / `jijan1234`
+- **Member**: `saiful@demo.com` / `jijan1234`
+- **Member**: `rabby@demo.com` / `jijan1234`
+
+## 🛠 Built With
 - **Monorepo**: Turborepo
-- **Frontend**: Next.js 14 (App Router), Tailwind CSS, Zustand, Recharts, TipTap, DnD
+- **Frontend**: Next.js 14 (App Router), Tailwind CSS, Zustand, Recharts
 - **Backend**: Node.js, Express.js, Prisma ORM, Socket.io, Cloudinary
 - **Database**: PostgreSQL
+- **Deployment**: Railway
 
-## ✨ Advanced Features Implemented
+## ✨ Advanced Features Implemented (Chosen 2)
 
-As per the technical assessment requirements, I have implemented two advanced features:
+As per the technical assessment requirements, I have implemented two specific advanced features:
 
-1. **Optimistic UI (#2)**
-   - When creating a Goal, Action Item, or Announcement, the UI immediately reflects the new item locally before the server confirmation arrives. If the server request fails, the UI rolls back gracefully and displays an error toast.
-   - Kanban board dragging immediately updates the UI state, providing instantaneous feedback.
-   - Empathizes responsiveness over network latency.
-
-2. **Advanced RBAC (#4)**
+1. **Advanced RBAC (#4)**
    - Roles: `ADMIN`, `MEMBER`, and `VIEWER`.
    - Comprehensive permission matrix on the backend implemented as a custom middleware (`requirePermission`).
    - Admins can manage workspace settings, invite/remove members, update roles, and manage announcements.
    - Members can create/edit goals, action items, and comments.
-   - Viewers can only comment and react.
    - UI conditionally renders actions based on role (e.g. Settings tab is hidden for non-admins, action status dropdowns disabled for viewers).
 
+2. **Audit Log (#5)**
+   - Immutable log of all workspace changes.
+   - Dedicated filterable timeline UI in the dashboard.
+   - Tracks entity creations (Goals, Action Items, Announcements), role changes, and member joins/leaves.
+   - Complete CSV Export feature to download the entire timeline history for compliance.
+
 ## 🎁 Extra Features Built
-- Full **Dark Mode / Light Mode** support out-of-the-box (detects system preference).
-- **Global Command Palette** (Press `Cmd+K` / `Ctrl+K`) for rapid navigation.
-- **Collaborative Live Editing** for Goal Descriptions (shows live cursors and "Editing" badges).
-- Full **Audit Log** track of all workspace actions, with CSV Export feature.
+- Full **Dark Mode / Light Mode** support (detects system preference).
 - **Email Notifications** via Nodemailer for mentions and invites.
-- **OpenAPI Swagger Docs** served at `/api/docs`.
+- **Optimistic UI** & **Real-time Synchronization** (via Socket.io).
 
 ## ⚙️ Setup & Local Development
 
@@ -73,35 +81,25 @@ npm install
 
 ### 4. Database Setup & Seeding
 ```bash
-# Push schema to database
-npm run db:push
+# Enter the API directory
+cd apps/api
 
-# Seed the database with demo data
-npm run db:seed
+# Push schema to database
+npx prisma db push
+
+# Seed the database with demo data (Note: This wipes old data and resets demo accounts)
+node prisma/seed.js
 ```
 
 ### 5. Running the App
+From the root directory:
 ```bash
 npm run dev
 ```
 
 The frontend will be available at `http://localhost:3000` and backend API at `http://localhost:4000`.
 
-### 👥 Demo Accounts
-Seeded accounts you can use to test immediately:
-- `alice@demo.com` / `Demo1234!` (Admin)
-- `bob@demo.com` / `Demo1234!` (Member)
-- `carol@demo.com` / `Demo1234!` (Member)
-
-## ☁️ Deployment on Railway
-
-1. Create a new Railway project and provision a PostgreSQL database plugin.
-2. Create two separate services within the project (one for the backend, one for frontend).
-3. Set the Root Directory of the backend service to `apps/api`. Set its start command to `npm start`. Add all API `.env` variables there.
-4. Set the Root Directory of the frontend service to `apps/web`. The build command will be `npm run build` and start command `npm start`. Add the API/Socket URL env vars to this service.
-5. Deploy!
-
 ## ⚠️ Known Limitations
 - Rich text image uploads within the TipTap editor are not implemented (attachments go directly on the post instead).
-- Socket connection drops and reconnects might rarely cause duplicate visual updates until page refresh (though idempotent locally).
 - Email delivery relies on valid SMTP credentials. If Nodemailer fails to connect to Google SMTP, the app catches it silently without breaking the flow, but emails won't arrive.
+- When opening two accounts on the same browser window, the browser's shared cookie jar will conflict. Use Chrome Incognito Mode or a separate browser to test real-time collaboration between two different users simultaneously.

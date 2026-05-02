@@ -55,4 +55,34 @@ router.get('/', authenticate, async (req, res, next) => {
   } catch (err) { next(err); }
 });
 
+// GET /api/analytics/export?workspaceId=xxx
+router.get('/export', authenticate, async (req, res, next) => {
+  try {
+    const { workspaceId } = req.query;
+    if (!workspaceId) return res.status(400).json({ error: 'workspaceId required' });
+
+    const member = await prisma.workspaceMember.findUnique({
+      where: { workspaceId_userId: { workspaceId, userId: req.user.id } },
+    });
+    if (!member) return res.status(403).json({ error: 'Not a member' });
+
+    const [goals, items] = await Promise.all([
+      prisma.goal.findMany({ where: { workspaceId }, include: { owner: true } }),
+      prisma.actionItem.findMany({ where: { workspaceId }, include: { assignee: true } })
+    ]);
+
+    let csv = 'Type,Title,Status,Owner/Assignee,Due Date,Created At\n';
+    goals.forEach(g => {
+      csv += `Goal,"${g.title.replace(/"/g, '""')}",${g.status},${g.owner?.name || ''},${g.dueDate ? g.dueDate.toISOString() : ''},${g.createdAt.toISOString()}\n`;
+    });
+    items.forEach(i => {
+      csv += `Action Item,"${i.title.replace(/"/g, '""')}",${i.status},${i.assignee?.name || ''},${i.dueDate ? i.dueDate.toISOString() : ''},${i.createdAt.toISOString()}\n`;
+    });
+
+    res.header('Content-Type', 'text/csv');
+    res.attachment('workspace-export.csv');
+    res.send(csv);
+  } catch (err) { next(err); }
+});
+
 module.exports = router;

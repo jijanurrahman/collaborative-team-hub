@@ -38,18 +38,18 @@ async function main() {
 
   const bob = await prisma.user.create({
     data: {
-      email: 'bob@demo.com',
+      email: 'saiful@demo.com',
       password: hashedPassword,
-      name: 'Bob Smith',
+      name: 'Saiful Islam',
       avatarUrl: 'https://api.dicebear.com/7.x/avataaars/svg?seed=bob',
     },
   });
 
   const carol = await prisma.user.create({
     data: {
-      email: 'carol@demo.com',
+      email: 'rabby@demo.com',
       password: hashedPassword,
-      name: 'Carol Williams',
+      name: 'Rabby Sheikh',
       avatarUrl: 'https://api.dicebear.com/7.x/avataaars/svg?seed=carol',
     },
   });
@@ -69,7 +69,7 @@ async function main() {
   await prisma.workspaceMember.createMany({
     data: [
       { workspaceId: workspace.id, userId: alice.id, role: 'ADMIN' },
-      { workspaceId: workspace.id, userId: bob.id,   role: 'MEMBER' },
+      { workspaceId: workspace.id, userId: bob.id, role: 'MEMBER' },
       { workspaceId: workspace.id, userId: carol.id, role: 'MEMBER' },
     ],
   });
@@ -111,11 +111,11 @@ async function main() {
   // ── Milestones ────────────────────────────────────────────────────────
   await prisma.milestone.createMany({
     data: [
-      { title: 'Design mockups approved',       goalId: goal1.id, progress: 100, status: 'COMPLETED'   },
-      { title: 'Backend API endpoints ready',   goalId: goal1.id, progress: 75,  status: 'IN_PROGRESS' },
-      { title: 'Frontend integration',          goalId: goal1.id, progress: 30,  status: 'IN_PROGRESS' },
-      { title: 'Database indexing',             goalId: goal2.id, progress: 100, status: 'COMPLETED'   },
-      { title: 'Caching layer implementation',  goalId: goal2.id, progress: 60,  status: 'IN_PROGRESS' },
+      { title: 'Design mockups approved', goalId: goal1.id, progress: 100, status: 'COMPLETED' },
+      { title: 'Backend API endpoints ready', goalId: goal1.id, progress: 75, status: 'IN_PROGRESS' },
+      { title: 'Frontend integration', goalId: goal1.id, progress: 30, status: 'IN_PROGRESS' },
+      { title: 'Database indexing', goalId: goal2.id, progress: 100, status: 'COMPLETED' },
+      { title: 'Caching layer implementation', goalId: goal2.id, progress: 60, status: 'IN_PROGRESS' },
     ],
   });
 
@@ -143,15 +143,15 @@ async function main() {
   // ── Comments on first announcement ───────────────────────────────────
   await prisma.comment.createMany({
     data: [
-      { content: 'Great! Looking forward to the Q2 goals.',  authorId: bob.id,   announcementId: ann1.id },
-      { content: 'Thanks for sharing. Will review today.',   authorId: carol.id, announcementId: ann1.id },
+      { content: 'Great! Looking forward to the Q2 goals.', authorId: bob.id, announcementId: ann1.id },
+      { content: 'Thanks for sharing. Will review today.', authorId: carol.id, announcementId: ann1.id },
     ],
   });
 
   // ── Reactions ─────────────────────────────────────────────────────────
   await prisma.reaction.createMany({
     data: [
-      { emoji: '🚀', userId: bob.id,   announcementId: ann1.id },
+      { emoji: '🚀', userId: bob.id, announcementId: ann1.id },
       { emoji: '👍', userId: carol.id, announcementId: ann1.id },
     ],
   });
@@ -220,10 +220,10 @@ async function main() {
   await prisma.auditLog.createMany({
     data: [
       { workspaceId: workspace.id, userId: alice.id, action: 'CREATE', entityType: 'WORKSPACE', entityId: workspace.id, metadata: { name: workspace.name } },
-      { workspaceId: workspace.id, userId: alice.id, action: 'CREATE', entityType: 'GOAL',      entityId: goal1.id,     metadata: { title: goal1.title } },
-      { workspaceId: workspace.id, userId: alice.id, action: 'CREATE', entityType: 'GOAL',      entityId: goal2.id,     metadata: { title: goal2.title } },
-      { workspaceId: workspace.id, userId: bob.id,   action: 'JOIN',   entityType: 'WORKSPACE', entityId: workspace.id, metadata: {} },
-      { workspaceId: workspace.id, userId: carol.id, action: 'JOIN',   entityType: 'WORKSPACE', entityId: workspace.id, metadata: {} },
+      { workspaceId: workspace.id, userId: alice.id, action: 'CREATE', entityType: 'GOAL', entityId: goal1.id, metadata: { title: goal1.title } },
+      { workspaceId: workspace.id, userId: alice.id, action: 'CREATE', entityType: 'GOAL', entityId: goal2.id, metadata: { title: goal2.title } },
+      { workspaceId: workspace.id, userId: bob.id, action: 'JOIN', entityType: 'WORKSPACE', entityId: workspace.id, metadata: {} },
+      { workspaceId: workspace.id, userId: carol.id, action: 'JOIN', entityType: 'WORKSPACE', entityId: workspace.id, metadata: {} },
     ],
   });
 

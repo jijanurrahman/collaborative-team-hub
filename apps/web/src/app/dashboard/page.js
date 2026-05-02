@@ -78,15 +78,34 @@ export default function DashboardPage() {
   return (
     <div className="p-6 lg:p-8 space-y-8 animate-fade-in">
       {/* Header */}
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
           <h1 className="text-2xl font-bold text-[var(--text-primary)]">Dashboard</h1>
           <p className="text-[var(--text-muted)] text-sm mt-0.5">
             {currentWorkspace.name} · Last updated {format(new Date(), 'MMM d, h:mm a')}
           </p>
         </div>
-        <div className="flex gap-2">
-          <Link href="/dashboard/goals" className="btn-secondary btn-sm">
+        <div className="flex items-center gap-3">
+          <button 
+            onClick={async () => {
+              try {
+                const { workspacesApi } = await import('@/lib/api');
+                const res = await workspacesApi.export(currentWorkspace.id);
+                const url = window.URL.createObjectURL(new Blob([res.data]));
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = `workspace-${currentWorkspace.id}-export.csv`;
+                a.click();
+              } catch (e) {
+                console.error(e);
+                import('react-hot-toast').then(t => t.default.error('Export failed'));
+              }
+            }}
+            className="btn-secondary btn-sm"
+          >
+            <Clock className="w-4 h-4" /> Export CSV
+          </button>
+          <Link href="/dashboard/goals" className="btn-primary btn-sm">
             <Target className="w-4 h-4" /> View Goals
           </Link>
         </div>

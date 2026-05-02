@@ -156,7 +156,7 @@ router.post('/:workspaceId/invite', authenticate, requirePermission('invite:memb
       const { createNotification } = require('../utils/notifications');
       const notification = await createNotification({
         userId: existingUser.id,
-        type: 'SYSTEM',
+        type: 'INVITATION',
         title: 'Workspace Invitation',
         message: `${req.user.name} invited you to join ${workspace.name}`,
         link: `/invite/${invitation.token}`,

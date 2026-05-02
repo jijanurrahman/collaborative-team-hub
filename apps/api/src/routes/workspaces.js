@@ -125,12 +125,13 @@ router.post('/:workspaceId/invite', authenticate, requirePermission('invite:memb
 
     const { email, role = 'MEMBER' } = req.body;
     const { workspaceId } = req.params;
+    const normalizedEmail = email.toLowerCase();
 
     const workspace = await prisma.workspace.findUnique({ where: { id: workspaceId } });
     if (!workspace) return res.status(404).json({ error: 'Workspace not found' });
 
     // Check if already a member
-    const existingUser = await prisma.user.findUnique({ where: { email } });
+    const existingUser = await prisma.user.findFirst({ where: { email: { equals: normalizedEmail, mode: 'insensitive' } } });
     if (existingUser) {
       const existing = await prisma.workspaceMember.findUnique({
         where: { workspaceId_userId: { workspaceId, userId: existingUser.id } },
@@ -141,7 +142,7 @@ router.post('/:workspaceId/invite', authenticate, requirePermission('invite:memb
     const invitation = await prisma.workspaceInvitation.create({
       data: {
         workspaceId,
-        email,
+        email: normalizedEmail,
         role,
         senderId: req.user.id,
         expiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
@@ -149,7 +150,7 @@ router.post('/:workspaceId/invite', authenticate, requirePermission('invite:memb
     });
 
     const inviteLink = `${process.env.CLIENT_URL}/invite/${invitation.token}`;
-    await sendInvitationEmail({ to: email, inviterName: req.user.name, workspaceName: workspace.name, inviteLink });
+    await sendInvitationEmail({ to: normalizedEmail, inviterName: req.user.name, workspaceName: workspace.name, inviteLink });
 
     if (existingUser) {
       const { createNotification } = require('../utils/notifications');
@@ -166,7 +167,7 @@ router.post('/:workspaceId/invite', authenticate, requirePermission('invite:memb
       }
     }
 
-    await createAuditLog({ workspaceId, userId: req.user.id, action: 'INVITE', entityType: 'MEMBER', metadata: { email, role } });
+    await createAuditLog({ workspaceId, userId: req.user.id, action: 'INVITE', entityType: 'MEMBER', metadata: { email: normalizedEmail, role } });
 
     res.status(201).json({ invitation, message: 'Invitation sent', inviteLink });
   } catch (err) { next(err); }
@@ -183,7 +184,7 @@ router.post('/accept-invite/:token', authenticate, async (req, res, next) => {
     if (!invitation) return res.status(404).json({ error: 'Invitation not found' });
     if (invitation.status !== 'PENDING') return res.status(400).json({ error: 'Invitation already used' });
     if (invitation.expiresAt < new Date()) return res.status(400).json({ error: 'Invitation expired' });
-    if (invitation.email !== req.user.email) return res.status(403).json({ error: 'Invitation is for a different email' });
+    if (invitation.email.toLowerCase() !== req.user.email.toLowerCase()) return res.status(403).json({ error: 'Invitation is for a different email' });
 
     const member = await prisma.workspaceMember.create({
       data: { workspaceId: invitation.workspaceId, userId: req.user.id, role: invitation.role },

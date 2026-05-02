@@ -5,6 +5,7 @@ const { authenticate, requirePermission } = require('../middleware/auth');
 const { createAuditLog } = require('../utils/audit');
 const { createNotification } = require('../utils/notifications');
 const { sendMentionEmail } = require('../utils/email');
+const { processMentions } = require('../utils/mentions');
 
 const router = express.Router();
 
@@ -246,33 +247,16 @@ router.post('/:announcementId/comments', authenticate, [
       },
     });
 
-    // Extract @mentions
-    const mentionRegex = /@\[([^\]]+)\]\(([^)]+)\)/g;
-    let match;
-    while ((match = mentionRegex.exec(content)) !== null) {
-      const mentionedUserId = match[2];
-      await prisma.mention.create({ data: { commentId: comment.id, userId: mentionedUserId } });
-      await createNotification({
-        userId: mentionedUserId, type: 'MENTION',
-        title: `${req.user.name} mentioned you`,
-        message: content.substring(0, 100),
-        link: `/workspaces/${announcement.workspaceId}/announcements/${announcementId}`,
-      });
-      // Email notification
-      const mentionedUser = await prisma.user.findUnique({ where: { id: mentionedUserId } });
-      if (mentionedUser) {
-        await sendMentionEmail({
-          to: mentionedUser.email, mentionerName: req.user.name,
-          workspaceName: 'the workspace', context: content.substring(0, 200),
-          link: `${process.env.CLIENT_URL}/workspaces/${announcement.workspaceId}/announcements/${announcementId}`,
-        });
-      }
-
-      const io = req.app.get('io');
-      io.to(`user:${mentionedUserId}`).emit('notification:new', { type: 'MENTION', userId: mentionedUserId });
-    }
-
+    // Handle @mentions
     const io = req.app.get('io');
+    await processMentions({
+      content,
+      workspaceId: announcement.workspaceId,
+      sender: req.user,
+      link: `/workspaces/${announcement.workspaceId}/announcements/${announcementId}`,
+      io
+    });
+
     io.to(`workspace:${announcement.workspaceId}`).emit('comment:created', { announcementId, comment });
     res.status(201).json({ comment });
   } catch (err) { next(err); }

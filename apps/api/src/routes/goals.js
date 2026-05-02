@@ -4,6 +4,7 @@ const { prisma } = require('../utils/prisma');
 const { authenticate, requirePermission } = require('../middleware/auth');
 const { createAuditLog } = require('../utils/audit');
 const { createNotification } = require('../utils/notifications');
+const { processMentions } = require('../utils/mentions');
 
 const router = express.Router();
 
@@ -228,7 +229,16 @@ router.post('/:goalId/progress', authenticate, [
       include: { user: { select: { id: true, name: true, avatarUrl: true } } },
     });
 
+    // Handle mentions
     const io = req.app.get('io');
+    await processMentions({
+      content: req.body.content,
+      workspaceId: goal.workspaceId,
+      sender: req.user,
+      link: `/workspaces/${goal.workspaceId}/goals`,
+      io
+    });
+
     io.to(`workspace:${goal.workspaceId}`).emit('goal:progress_update', { goalId: goal.id, update });
     res.status(201).json({ update });
   } catch (err) { next(err); }

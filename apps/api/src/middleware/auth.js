@@ -68,7 +68,7 @@ const PERMISSIONS = {
 function requirePermission(permission) {
   return async (req, res, next) => {
     try {
-      const workspaceId = req.params.workspaceId || req.workspaceId;
+      const workspaceId = req.params.workspaceId || req.workspaceId || req.body.workspaceId || req.query.workspaceId;
       if (!workspaceId) return res.status(400).json({ error: 'Workspace ID required' });
 
       const member = req.member || await prisma.workspaceMember.findUnique({

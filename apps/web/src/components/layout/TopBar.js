@@ -155,7 +155,7 @@ export default function TopBar() {
                           <p className="text-xs text-[var(--text-muted)] mt-0.5 line-clamp-2">{n.message}</p>
                           <p className="text-xs text-[var(--text-muted)] mt-1">{format(new Date(n.createdAt), 'MMM d, h:mm a')}</p>
                           
-                          {n.type === 'INVITATION' && (
+                          {n.type === 'INVITATION' && n.link && (
                             <div className="mt-2">
                               {n.status === 'ACCEPTED' ? (
                                 <div className="flex items-center gap-1 text-green-500 text-xs font-medium">

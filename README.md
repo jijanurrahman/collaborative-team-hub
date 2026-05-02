@@ -37,9 +37,12 @@ As per the technical assessment requirements, I have implemented two specific ad
    - Complete CSV Export feature to download the entire timeline history for compliance.
 
 ## 🎁 Extra Features Built
-- Full **Dark Mode / Light Mode** support (detects system preference).
-- **Email Notifications** via Nodemailer for mentions and invites.
-- **Optimistic UI** & **Real-time Synchronization** (via Socket.io).
+- **Real-time Analytics Dashboard**: Dynamic stats for goals and action items with trend charts (Recharts) and real-time updates via Socket.io.
+- **Data Export**: Support for exporting both Audit Logs and Workspace Data (Goals/Items) as CSV files.
+- **Advanced Notifications UI**: Inline Accept/Reject for invites, individual delete, and "Clear All" functionality.
+- **Email Notifications**: via Nodemailer for mentions and invites.
+- **Dark Mode**: Full system-aware dark mode support.
+- **Optimistic UI**: Real-time synchronization and smooth state transitions.
 
 ## ⚙️ Setup & Local Development
 

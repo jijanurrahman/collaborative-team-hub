@@ -41,6 +41,12 @@ export default function GoalsPage() {
     if (!socket) return;
     const onCreated = (g) => setGoals(prev => {
       if (prev.some(x => x.id === g.id)) return prev;
+      const tempIndex = prev.findIndex(x => x.id.startsWith('temp-') && x.title === g.title);
+      if (tempIndex !== -1) {
+        const next = [...prev];
+        next[tempIndex] = g;
+        return next;
+      }
       return [g, ...prev];
     });
     const onUpdated = (g) => setGoals(prev => prev.map(item => item.id === g.id ? { ...item, ...g } : item));

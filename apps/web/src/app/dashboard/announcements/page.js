@@ -42,6 +42,13 @@ export default function AnnouncementsPage() {
     const handlers = {
       'announcement:created': (a) => setAnnouncements(prev => {
         if (prev.some(x => x.id === a.id)) return prev;
+        // Try to replace optimistic version
+        const tempIndex = prev.findIndex(x => x.id.startsWith('temp-') && (x.title === a.title || x.content === a.content));
+        if (tempIndex !== -1) {
+          const next = [...prev];
+          next[tempIndex] = a;
+          return next;
+        }
         return [a, ...prev];
       }),
       'announcement:updated': (a) => setAnnouncements(prev => prev.map(x => x.id === a.id ? { ...x, ...a } : x)),

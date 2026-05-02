@@ -85,6 +85,16 @@ router.post('/', authenticate, requirePermission('create:announcement'), [
 
     await createAuditLog({ workspaceId, userId: req.user.id, action: 'CREATE', entityType: 'ANNOUNCEMENT', entityId: announcement.id, metadata: { title } });
 
+    // Handle mentions
+    const io = req.app.get('io');
+    await processMentions({
+      content,
+      workspaceId,
+      sender: req.user,
+      link: '/dashboard/announcements',
+      io
+    });
+
     // Notify all workspace members
     const members = await prisma.workspaceMember.findMany({ where: { workspaceId }, select: { userId: true } });
     await Promise.all(
@@ -92,7 +102,7 @@ router.post('/', authenticate, requirePermission('create:announcement'), [
         createNotification({
           userId: m.userId, type: 'ANNOUNCEMENT', title: 'New Announcement',
           message: `${req.user.name} posted: ${title}`,
-          link: `/workspaces/${workspaceId}/announcements/${announcement.id}`,
+          link: '/dashboard/announcements',
         })
       )
     );
@@ -253,7 +263,7 @@ router.post('/:announcementId/comments', authenticate, [
       content,
       workspaceId: announcement.workspaceId,
       sender: req.user,
-      link: `/workspaces/${announcement.workspaceId}/announcements/${announcementId}`,
+      link: '/dashboard/announcements',
       io
     });
 

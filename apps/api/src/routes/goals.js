@@ -235,7 +235,7 @@ router.post('/:goalId/progress', authenticate, [
       content: req.body.content,
       workspaceId: goal.workspaceId,
       sender: req.user,
-      link: `/workspaces/${goal.workspaceId}/goals`,
+      link: '/dashboard/goals',
       io
     });
 

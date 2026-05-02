@@ -110,6 +110,12 @@ export default function ActionItemsPage() {
     if (!socket) return;
     const onCreated = (i) => setItems(prev => {
       if (prev.some(x => x.id === i.id)) return prev;
+      const tempIndex = prev.findIndex(x => x.id.startsWith('temp-') && x.title === i.title);
+      if (tempIndex !== -1) {
+        const next = [...prev];
+        next[tempIndex] = i;
+        return next;
+      }
       return [i, ...prev];
     });
     const onUpdated = (i) => setItems(prev => prev.map(x => x.id === i.id ? { ...x, ...i } : x));

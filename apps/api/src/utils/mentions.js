@@ -29,10 +29,11 @@ async function processMentions({ content, workspaceId, sender, link, io }) {
     if (m.userId === sender.id) continue;
     if (mentionedUserIds.has(m.userId)) continue;
 
-    // Use regex to find @Name with word boundaries to avoid partial matches (e.g. @John matching @Johnathan)
-    // We escape the name just in case it contains special regex characters
+    // Use regex to find @Name with case-insensitive matching and flexible boundaries
     const escapedName = m.user.name.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-    const plainRegex = new RegExp(`@${escapedName}\\b`, 'g');
+    // Matches @Name if it's at start, after space, or after an HTML tag, 
+    // and followed by non-word char or end of string.
+    const plainRegex = new RegExp(`(^|[\\s>])@${escapedName}(?![a-zA-Z0-9])`, 'gi');
     
     if (plainRegex.test(content)) {
       mentionedUserIds.add(m.userId);
@@ -47,7 +48,7 @@ async function processMentions({ content, workspaceId, sender, link, io }) {
         userId,
         type: 'MENTION',
         title: `${sender.name} mentioned you`,
-        message: content.replace(/<[^>]*>/g, '').substring(0, 100), // Strip HTML for message
+        message: content.replace(/<[^>]*>/g, '').substring(0, 100),
         link,
       });
 

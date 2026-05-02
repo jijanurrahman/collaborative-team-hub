@@ -43,4 +43,24 @@ router.patch('/read-all', authenticate, async (req, res, next) => {
   } catch (err) { next(err); }
 });
 
+// DELETE /api/notifications/all
+router.delete('/all', authenticate, async (req, res, next) => {
+  try {
+    await prisma.notification.deleteMany({
+      where: { userId: req.user.id },
+    });
+    res.json({ message: 'All notifications deleted' });
+  } catch (err) { next(err); }
+});
+
+// DELETE /api/notifications/:id
+router.delete('/:id', authenticate, async (req, res, next) => {
+  try {
+    await prisma.notification.delete({
+      where: { id: req.params.id, userId: req.user.id },
+    });
+    res.json({ message: 'Notification deleted' });
+  } catch (err) { next(err); }
+});
+
 module.exports = router;

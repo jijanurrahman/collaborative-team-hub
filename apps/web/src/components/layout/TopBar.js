@@ -1,7 +1,7 @@
 'use client';
 import { useState, useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
-import { Bell, Moon, Sun, Search } from 'lucide-react';
+import { Bell, Moon, Sun, Search, Trash2, Check, X } from 'lucide-react';
 import { useTheme } from 'next-themes';
 import { useNotificationStore } from '@/store/socketStore';
 import { notificationsApi, workspacesApi } from '@/lib/api';
@@ -14,7 +14,7 @@ export default function TopBar() {
   const { theme, setTheme } = useTheme();
   const [mounted, setMounted] = useState(false);
   const [showNotifs, setShowNotifs] = useState(false);
-  const { notifications, unreadCount, setNotifications, markRead, markAllRead } = useNotificationStore();
+  const { notifications, unreadCount, setNotifications, markRead, markAllRead, deleteNotification, clearAllNotifications, updateNotification } = useNotificationStore();
   const notifRef = useRef(null);
   const { currentWorkspace, fetchWorkspaces } = useWorkspaceStore();
   const router = useRouter();
@@ -44,6 +44,17 @@ export default function TopBar() {
     await notificationsApi.markAllRead().catch(() => {});
   };
 
+  const handleDelete = async (e, id) => {
+    e.stopPropagation();
+    deleteNotification(id);
+    await notificationsApi.delete(id).catch(() => {});
+  };
+
+  const handleClearAll = async () => {
+    clearAllNotifications();
+    await notificationsApi.deleteAll().catch(() => {});
+  };
+
   const handleAcceptInvite = async (e, n) => {
     e.stopPropagation();
     if (!n.link) return;
@@ -54,8 +65,8 @@ export default function TopBar() {
       await workspacesApi.acceptInvite(token);
       await fetchWorkspaces();
       toast.success('Successfully joined workspace!');
-      handleMarkRead(n.id);
-      setShowNotifs(false);
+      updateNotification(n.id, { status: 'ACCEPTED', isRead: true });
+      await notificationsApi.markRead(n.id).catch(() => {});
     } catch (err) {
       toast.error(err.response?.data?.error || 'Failed to accept invitation');
     }
@@ -70,7 +81,8 @@ export default function TopBar() {
     try {
       await workspacesApi.rejectInvite(token);
       toast.success('Invitation rejected');
-      handleMarkRead(n.id);
+      updateNotification(n.id, { status: 'REJECTED', isRead: true });
+      await notificationsApi.markRead(n.id).catch(() => {});
     } catch (err) {
       toast.error(err.response?.data?.error || 'Failed to reject invitation');
     }
@@ -109,11 +121,18 @@ export default function TopBar() {
             <div className="absolute right-0 top-full mt-2 w-80 card shadow-2xl z-50 animate-slide-up overflow-hidden border border-[var(--border)]">
               <div className="flex items-center justify-between px-4 py-3 border-b border-[var(--border)]">
                 <h3 className="font-semibold text-sm text-[var(--text-primary)]">Notifications</h3>
-                {unreadCount > 0 && (
-                  <button onClick={handleMarkAllRead} className="text-xs text-brand-500 hover:text-brand-600 font-medium">
-                    Mark all read
-                  </button>
-                )}
+                <div className="flex gap-2">
+                  {unreadCount > 0 && (
+                    <button onClick={handleMarkAllRead} className="text-xs text-brand-500 hover:text-brand-600 font-medium">
+                      Mark read
+                    </button>
+                  )}
+                  {notifications.length > 0 && (
+                    <button onClick={handleClearAll} className="text-xs text-red-500 hover:text-red-600 font-medium ml-2">
+                      Clear all
+                    </button>
+                  )}
+                </div>
               </div>
               <div className="max-h-80 overflow-y-auto">
                 {notifications.length === 0 ? (
@@ -124,25 +143,43 @@ export default function TopBar() {
                 ) : (
                   notifications.map((n) => (
                     <div key={n.id}
-                      onClick={() => { handleMarkRead(n.id); if (n.link && n.type !== 'INVITATION') router.push(n.link); setShowNotifs(false); }}
+                      onClick={() => { handleMarkRead(n.id); if (n.link && n.type !== 'INVITATION') { router.push(n.link); setShowNotifs(false); } }}
                       className={clsx(
-                        'w-full text-left px-4 py-3 hover:bg-[var(--bg-secondary)] transition-colors border-b border-[var(--border-subtle)] last:border-0 cursor-pointer',
+                        'w-full text-left px-4 py-3 hover:bg-[var(--bg-secondary)] transition-colors border-b border-[var(--border-subtle)] last:border-0 cursor-pointer group/notif',
                         !n.isRead && 'bg-brand-50 dark:bg-brand-900/10'
                       )}>
-                      <div className="flex items-start gap-3">
+                      <div className="flex items-start gap-3 relative">
                         {!n.isRead && <div className="w-2 h-2 rounded-full bg-brand-500 mt-1.5 flex-shrink-0" />}
-                        <div className={clsx('flex-1 min-w-0', n.isRead && 'pl-5')}>
+                        <div className={clsx('flex-1 min-w-0 pr-6', n.isRead && 'pl-5')}>
                           <p className="text-sm font-medium text-[var(--text-primary)] truncate">{n.title}</p>
                           <p className="text-xs text-[var(--text-muted)] mt-0.5 line-clamp-2">{n.message}</p>
                           <p className="text-xs text-[var(--text-muted)] mt-1">{format(new Date(n.createdAt), 'MMM d, h:mm a')}</p>
                           
                           {n.type === 'INVITATION' && (
-                            <div className="flex items-center gap-2 mt-2">
-                              <button onClick={(e) => handleAcceptInvite(e, n)} className="btn-primary btn-sm flex-1 py-1 px-2 text-xs">Accept</button>
-                              <button onClick={(e) => handleRejectInvite(e, n)} className="btn-secondary btn-sm flex-1 py-1 px-2 text-xs">Reject</button>
+                            <div className="mt-2">
+                              {n.status === 'ACCEPTED' ? (
+                                <div className="flex items-center gap-1 text-green-500 text-xs font-medium">
+                                  <Check className="w-4 h-4" /> Accepted
+                                </div>
+                              ) : n.status === 'REJECTED' ? (
+                                <div className="flex items-center gap-1 text-red-500 text-xs font-medium">
+                                  <X className="w-4 h-4" /> Rejected
+                                </div>
+                              ) : (
+                                <div className="flex items-center gap-2">
+                                  <button onClick={(e) => handleAcceptInvite(e, n)} className="btn-primary btn-sm flex-1 py-1 px-2 text-xs">Accept</button>
+                                  <button onClick={(e) => handleRejectInvite(e, n)} className="bg-red-500 text-white hover:bg-red-600 rounded-lg font-medium transition-all duration-200 flex-1 py-1 px-2 text-xs">Reject</button>
+                                </div>
+                              )}
                             </div>
                           )}
                         </div>
+                        <button
+                          onClick={(e) => handleDelete(e, n.id)}
+                          className="absolute right-0 top-0 p-1 text-[var(--text-muted)] hover:text-red-500 opacity-0 group-hover/notif:opacity-100 transition-opacity"
+                        >
+                          <Trash2 className="w-4 h-4" />
+                        </button>
                       </div>
                     </div>
                   ))

@@ -59,5 +59,25 @@ export const useNotificationStore = create(
         unreadCount: 0,
       }));
     },
+
+    deleteNotification: (id) => {
+      set((state) => {
+        const notif = state.notifications.find(n => n.id === id);
+        return {
+          notifications: state.notifications.filter(n => n.id !== id),
+          unreadCount: (notif && !notif.isRead) ? Math.max(0, state.unreadCount - 1) : state.unreadCount,
+        };
+      });
+    },
+
+    clearAllNotifications: () => {
+      set({ notifications: [], unreadCount: 0 });
+    },
+
+    updateNotification: (id, updates) => {
+      set((state) => ({
+        notifications: state.notifications.map(n => n.id === id ? { ...n, ...updates } : n),
+      }));
+    },
   }))
 );

@@ -140,11 +140,14 @@ export const notificationsApi = {
   list: (params) => api.get('/notifications', { params }),
   markRead: (id) => api.patch(`/notifications/${id}/read`),
   markAllRead: () => api.patch('/notifications/read-all'),
+  delete: (id) => api.delete(`/notifications/${id}`),
+  deleteAll: () => api.delete('/notifications/all'),
 };
 
 // Analytics
 export const analyticsApi = {
   get: (workspaceId) => api.get('/analytics', { params: { workspaceId } }),
+  export: (workspaceId) => api.get('/analytics/export', { params: { workspaceId }, responseType: 'blob' }),
 };
 
 // Audit

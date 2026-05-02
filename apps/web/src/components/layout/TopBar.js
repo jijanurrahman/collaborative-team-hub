@@ -4,10 +4,11 @@ import { useRouter } from 'next/navigation';
 import { Bell, Moon, Sun, Search } from 'lucide-react';
 import { useTheme } from 'next-themes';
 import { useNotificationStore } from '@/store/socketStore';
-import { notificationsApi } from '@/lib/api';
+import { notificationsApi, workspacesApi } from '@/lib/api';
 import { format } from 'date-fns';
 import { useWorkspaceStore } from '@/store/workspaceStore';
 import clsx from 'clsx';
+import toast from 'react-hot-toast';
 
 export default function TopBar() {
   const { theme, setTheme } = useTheme();
@@ -15,7 +16,7 @@ export default function TopBar() {
   const [showNotifs, setShowNotifs] = useState(false);
   const { notifications, unreadCount, setNotifications, markRead, markAllRead } = useNotificationStore();
   const notifRef = useRef(null);
-  const { currentWorkspace } = useWorkspaceStore();
+  const { currentWorkspace, fetchWorkspaces } = useWorkspaceStore();
   const router = useRouter();
 
   useEffect(() => { setMounted(true); }, []);
@@ -41,6 +42,38 @@ export default function TopBar() {
   const handleMarkAllRead = async () => {
     markAllRead();
     await notificationsApi.markAllRead().catch(() => {});
+  };
+
+  const handleAcceptInvite = async (e, n) => {
+    e.stopPropagation();
+    if (!n.link) return;
+    const token = n.link.split('/invite/')[1];
+    if (!token) return;
+    
+    try {
+      await workspacesApi.acceptInvite(token);
+      await fetchWorkspaces();
+      toast.success('Successfully joined workspace!');
+      handleMarkRead(n.id);
+      setShowNotifs(false);
+    } catch (err) {
+      toast.error(err.response?.data?.error || 'Failed to accept invitation');
+    }
+  };
+
+  const handleRejectInvite = async (e, n) => {
+    e.stopPropagation();
+    if (!n.link) return;
+    const token = n.link.split('/invite/')[1];
+    if (!token) return;
+
+    try {
+      await workspacesApi.rejectInvite(token);
+      toast.success('Invitation rejected');
+      handleMarkRead(n.id);
+    } catch (err) {
+      toast.error(err.response?.data?.error || 'Failed to reject invitation');
+    }
   };
 
   return (
@@ -90,10 +123,10 @@ export default function TopBar() {
                   </div>
                 ) : (
                   notifications.map((n) => (
-                    <button key={n.id}
-                      onClick={() => { handleMarkRead(n.id); if (n.link) router.push(n.link); setShowNotifs(false); }}
+                    <div key={n.id}
+                      onClick={() => { handleMarkRead(n.id); if (n.link && n.type !== 'INVITATION') router.push(n.link); setShowNotifs(false); }}
                       className={clsx(
-                        'w-full text-left px-4 py-3 hover:bg-[var(--bg-secondary)] transition-colors border-b border-[var(--border-subtle)] last:border-0',
+                        'w-full text-left px-4 py-3 hover:bg-[var(--bg-secondary)] transition-colors border-b border-[var(--border-subtle)] last:border-0 cursor-pointer',
                         !n.isRead && 'bg-brand-50 dark:bg-brand-900/10'
                       )}>
                       <div className="flex items-start gap-3">
@@ -102,9 +135,16 @@ export default function TopBar() {
                           <p className="text-sm font-medium text-[var(--text-primary)] truncate">{n.title}</p>
                           <p className="text-xs text-[var(--text-muted)] mt-0.5 line-clamp-2">{n.message}</p>
                           <p className="text-xs text-[var(--text-muted)] mt-1">{format(new Date(n.createdAt), 'MMM d, h:mm a')}</p>
+                          
+                          {n.type === 'INVITATION' && (
+                            <div className="flex items-center gap-2 mt-2">
+                              <button onClick={(e) => handleAcceptInvite(e, n)} className="btn-primary btn-sm flex-1 py-1 px-2 text-xs">Accept</button>
+                              <button onClick={(e) => handleRejectInvite(e, n)} className="btn-secondary btn-sm flex-1 py-1 px-2 text-xs">Reject</button>
+                            </div>
+                          )}
                         </div>
                       </div>
-                    </button>
+                    </div>
                   ))
                 )}
               </div>

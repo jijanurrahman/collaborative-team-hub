@@ -204,6 +204,40 @@ router.post('/accept-invite/:token', authenticate, async (req, res, next) => {
   } catch (err) { next(err); }
 });
 
+// POST /api/workspaces/reject-invite/:token
+router.post('/reject-invite/:token', authenticate, async (req, res, next) => {
+  try {
+    const invitation = await prisma.workspaceInvitation.findUnique({
+      where: { token: req.params.token },
+      include: { workspace: true, sender: true },
+    });
+
+    if (!invitation) return res.status(404).json({ error: 'Invitation not found' });
+    if (invitation.status !== 'PENDING') return res.status(400).json({ error: 'Invitation already used' });
+    if (invitation.email.toLowerCase() !== req.user.email.toLowerCase()) return res.status(403).json({ error: 'Invitation is for a different email' });
+
+    await prisma.workspaceInvitation.update({
+      where: { id: invitation.id },
+      data: { status: 'DECLINED' },
+    });
+
+    const { createNotification } = require('../utils/notifications');
+    const notification = await createNotification({
+      userId: invitation.senderId,
+      type: 'INVITATION',
+      title: 'Invitation Rejected',
+      message: `${req.user.name} rejected your invitation to join ${invitation.workspace.name}`,
+    });
+
+    if (notification) {
+      const io = req.app.get('io');
+      io.to(`user:${invitation.senderId}`).emit('notification:new', notification);
+    }
+
+    res.json({ message: 'Invitation rejected' });
+  } catch (err) { next(err); }
+});
+
 // PATCH /api/workspaces/:workspaceId/members/:userId/role
 router.patch('/:workspaceId/members/:userId/role', authenticate, requirePermission('change:role'), [
   body('role').isIn(['ADMIN', 'MEMBER', 'VIEWER']),

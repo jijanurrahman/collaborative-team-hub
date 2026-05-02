@@ -95,6 +95,7 @@ export const workspacesApi = {
   update: (id, data) => api.patch(`/workspaces/${id}`, data),
   invite: (id, data) => api.post(`/workspaces/${id}/invite`, data),
   acceptInvite: (token) => api.post(`/workspaces/accept-invite/${token}`),
+  rejectInvite: (token) => api.post(`/workspaces/reject-invite/${token}`),
   updateMemberRole: (wsId, userId, role) => api.patch(`/workspaces/${wsId}/members/${userId}/role`, { role }),
   removeMember: (wsId, userId) => api.delete(`/workspaces/${wsId}/members/${userId}`),
   export: (id) => api.get(`/workspaces/${id}/export`, { responseType: 'blob' }),

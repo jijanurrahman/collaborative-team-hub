@@ -44,7 +44,7 @@ async function processMentions({ content, workspaceId, sender, link, io }) {
   const mentionPromises = Array.from(mentionedUserIds).map(async (userId) => {
     try {
       // Create In-App Notification
-      await createNotification({
+      const notification = await createNotification({
         userId,
         type: 'MENTION',
         title: `${sender.name} mentioned you`,
@@ -66,7 +66,7 @@ async function processMentions({ content, workspaceId, sender, link, io }) {
 
       // Real-time Socket Notification
       if (io) {
-        io.to(`user:${userId}`).emit('notification:new', { type: 'MENTION', userId });
+        io.to(`user:${userId}`).emit('notification:new', notification);
       }
     } catch (err) {
       console.error(`Failed to process mention for user ${userId}:`, err);

@@ -153,7 +153,9 @@ export default function TopBar() {
                         <div className={clsx('flex-1 min-w-0 pr-6', n.isRead && 'pl-5')}>
                           <p className="text-sm font-medium text-[var(--text-primary)] truncate">{n.title}</p>
                           <p className="text-xs text-[var(--text-muted)] mt-0.5 line-clamp-2">{n.message}</p>
-                          <p className="text-xs text-[var(--text-muted)] mt-1">{format(new Date(n.createdAt), 'MMM d, h:mm a')}</p>
+                          <p className="text-xs text-[var(--text-muted)] mt-1">
+                            {n.createdAt ? format(new Date(n.createdAt), 'MMM d, h:mm a') : 'Just now'}
+                          </p>
                           
                           {n.type === 'INVITATION' && n.link && (
                             <div className="mt-2">

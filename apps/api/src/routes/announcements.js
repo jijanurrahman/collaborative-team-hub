@@ -99,12 +99,12 @@ router.post('/', authenticate, requirePermission('create:announcement'), [
     const members = await prisma.workspaceMember.findMany({ where: { workspaceId }, select: { userId: true } });
     await Promise.all(
       members.filter(m => m.userId !== req.user.id).map(async (m) => {
-        await createNotification({
+        const notif = await createNotification({
           userId: m.userId, type: 'ANNOUNCEMENT', title: 'New Announcement',
           message: `${req.user.name} posted: ${title}`,
           link: '/dashboard/announcements',
         });
-        io.to(`user:${m.userId}`).emit('notification:new', { type: 'ANNOUNCEMENT', userId: m.userId });
+        io.to(`user:${m.userId}`).emit('notification:new', notif);
       })
     );
 
